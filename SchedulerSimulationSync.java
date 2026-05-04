@@ -50,8 +50,7 @@ public static int contextSwitchCount = 0;      // Shared counter - NEEDS PROTECT
     // TODO #2: Add a Semaphore to limit concurrent process execution
     // Example: public static final Semaphore cpuSemaphore = new Semaphore(1);
 
-    
-   
+    public static final Semaphore cpuSemaphore = new Semaphore(1);  // Only 1 process can execute at a time
 
     // Method to increment context switch counter
     public static void incrementContextSwitch() {
@@ -126,6 +125,9 @@ class Process implements Runnable {
     public void run() {
         // TODO #3: Acquire CPU semaphore before executing
         // This ensures only allowed number of processes run simultaneously
+        try{
+
+        SharedResources.cpuSemaphore.acquire();
         
         try {
             if (startTime == -1) {
@@ -189,8 +191,12 @@ class Process implements Runnable {
         } finally {
             // TODO #4: Release CPU semaphore here
             // Always release in finally block to prevent deadlocks!
-        }
-    }
+             SharedResources.cpuSemaphore.release();
+  }// End of try block for semaphore acquisition 
+          } catch (InterruptedException e) {
+            System.out.println(Colors.RED + "  ✗ " + name + " was interrupted while waiting for CPU." + Colors.RESET);
+        
+    }}
     
     private String createProgressBar(int progress, int width) {
         int filled = (progress * width) / 100;
@@ -208,6 +214,7 @@ class Process implements Runnable {
     
     public void runToCompletion() {
         // TODO: Similar synchronization needed here
+        try{ SharedResources.cpuSemaphore.acquire();
         try {
             System.out.println(Colors.BRIGHT_CYAN + "  ⚡ " + Colors.BOLD + Colors.CYAN + name + 
                               Colors.RESET + Colors.BRIGHT_CYAN + " is the last process, running to completion" + 
@@ -223,9 +230,11 @@ class Process implements Runnable {
             System.out.println(Colors.BRIGHT_GREEN + "  ✓ " + Colors.BOLD + Colors.CYAN + name + 
                               Colors.RESET + Colors.BRIGHT_GREEN + " finished execution!" + Colors.RESET);
             System.out.println();
-        } catch (InterruptedException e) {
+        }  finally {
+            SharedResources.cpuSemaphore.release();
+        }} catch (InterruptedException e) {
             System.out.println(Colors.RED + "  ✗ " + name + " was interrupted." + Colors.RESET);
-        }
+        } 
     }
     
     public String getName() {
