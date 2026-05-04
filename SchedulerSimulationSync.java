@@ -46,10 +46,11 @@ public static int contextSwitchCount = 0;      // Shared counter - NEEDS PROTECT
     public static final ReentrantLock completedProcessLock= new ReentrantLock();
     public static final ReentrantLock WaitingTimeLock= new ReentrantLock();
     public static final ReentrantLock logLock = new ReentrantLock();
-    
+
     // TODO #2: Add a Semaphore to limit concurrent process execution
     // Example: public static final Semaphore cpuSemaphore = new Semaphore(1);
 
+    
    
 
     // Method to increment context switch counter
@@ -90,8 +91,14 @@ public static int contextSwitchCount = 0;      // Shared counter - NEEDS PROTECT
     public static void logExecution(String message) {
         // TODO: Protect this critical section with a lock
         // RACE CONDITION: ArrayList is not thread-safe!
-        executionLog.add(message);
-    }
+
+        logLock.lock();
+        try{
+executionLog.add(message);
+        }finally{
+            logLock.unlock();
+        }
+}
 }
 
 // Class representing a process that implements Runnable to be run by a thread
