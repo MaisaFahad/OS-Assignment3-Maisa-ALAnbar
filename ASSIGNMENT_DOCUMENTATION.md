@@ -1,8 +1,8 @@
 # Assignment 3 - Complete Documentation
 
-**Student Name**: [Your Full Name]  
-**Student ID**: [Your ID]  
-**Date Submitted**: [Submission Date]
+**Student Name**: [Maisa Fahad AL-Anbar]  
+**Student ID**: [445052201]  
+**Date Submitted**: [6-6-2026]
 
 ---
 
@@ -31,55 +31,55 @@
 
 Document your development process with **minimum 3 entries** showing progression:
 
-### Entry 1 - [Date, Time]
-**What I implemented**: 
+### Entry 1 - [3-5-2026,10:59 pm]
+**What I implemented**:  Set my student Id 445052201
 
-**Challenges encountered**: 
+**Challenges encountered**: it was easy
 
-**How I solved it**: 
+**How I solved it**: I looked for the designated place and put it there  
 
-**Testing approach**: 
+**Testing approach**: checked the code output
 
-**Time spent**: 
-
----
-
-### Entry 2 - [Date, Time]
-**What I implemented**: 
-
-**Challenges encountered**: 
-
-**How I solved it**: 
-
-**Testing approach**: 
-
-**Time spent**: 
+**Time spent**: 3 min
 
 ---
 
-### Entry 3 - [Date, Time]
-**What I implemented**: 
+### Entry 2 - [4-5-2026,11:01 pm]
+**What I implemented**: Add ReentrantLock to protect counter variables (contextSwitchCount,completedProcessCount, totalWaitingTime)
 
-**Challenges encountered**: 
+**Challenges encountered**: I had to ensure that the unlock() operation was placed correctly to avoid potential deadlocks
 
-**How I solved it**: 
+**How I solved it**: called .unlock() in the finally block This ensures "Mutual Exclusion meaning only one thread can modify the counters at any given time
 
-**Testing approach**: 
+**Testing approach**: ÷ compared the total number of completed processes with the initial number of processes created there is no deadlocks
 
-**Time spent**: 
+**Time spent**: 2 hours
 
 ---
 
-### Entry 4 - [Date, Time]
-**What I implemented**: 
+### Entry 3 - [4-5-2026,11:15 pm]
+**What I implemented**: Add ReentrantLock to protect execution log (ArrayList- prevent ConcurrentModificationException)
 
-**Challenges encountered**: 
+**Challenges encountered**: Sometimes the program crashed with an error called ConcurrentModificationException This happened because two or more threads were trying to use the Execution Log at the exact same time Also, without protection some messages were missing from the final list
 
-**How I solved it**: 
+**How I solved it**: I defined logLock in the SharedResources class هn the logExecution method I called logLock.lock() before adding any string to the listو By using the finally { logLock.unlock(); } I guaranteed that the list remains consistent and the lock is always released
 
-**Testing approach**: 
+**Testing approach**: I checked the final Execution Log Summary to make sure the total number of entries was correct and that no messages were missing I also made sure the program finished without any "ConcurrentModification" errors
 
-**Time spent**: 
+**Time spent**: 30 min
+
+---
+
+### Entry 4 - [5-5-2026,12:05 am]
+**What I implemented**: Add Semaphore to control concurrent CPU access (binary semaphore with 1 permit)
+
+**Challenges encountered**: CPU should only run one process at a time , Without a semaphore, all processes try to use the CPU and print on the screen at the same time This makes the output look very messy
+
+**How I solved it**: I used cpuSemaphore.acquire() before the process starts its execution and cpuSemaphore.release() in the finally block after it finished This forces threads to wait for their turn
+
+**Testing approach**: I monitored the terminal output while the program was running, I checked to see if only one process was printing its progress at a time
+
+**Time spent**: 1 hour
 
 ---
 
