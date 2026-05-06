@@ -105,8 +105,22 @@ Document your development process with **minimum 3 entries** showing progression
 - What incorrect behavior could occur?
 
 **Your Answer**:
+ 
+[1-contextSwitchCount: Non-atomic updates cause Lost Updates ,context switch accur mid operation and no mutual exclusion when multiple threads increment simultaneously, leading to inaccurate final stats
+2-executionLog: Concurrent access to ArrayList causes ConcurrentModificationException or data corruption, resulting in missing log entries
 
-[Your answer here - 4-6 sentences with code examples]
+public static void incrementContextSwitch() {
+        // 
+        // RACE CONDITION: Multiple threads might read and write simultaneously!
+        contextSwitchLock.lock();
+        try {
+            contextSwitchCount++;
+        } finally {
+            contextSwitchLock.unlock();
+        }
+    }
+    
+    Total Context Switches: 20 ]
 
 ---
 
@@ -115,7 +129,9 @@ Document your development process with **minimum 3 entries** showing progression
 
 **Your Answer**:
 
-[Your answer here - explain your implementation choices]
+[Lock: is a mutual exclusion mechanism (Mutex) designed to protect shared data by allowing only one thread to own the lock at a time its a boolean variable indicating lock availability
+Semaphore: it is integer variable accessed only through two atomic operation, manages a set of permits to control access to a limited resource
+]
 
 ---
 
@@ -124,7 +140,10 @@ Document your development process with **minimum 3 entries** showing progression
 
 **Your Answer**:
 
-[Your answer here - reference try-finally blocks, lock ordering, etc.]
+[A deadlock is a situation in which a set of processes are blocked because each process is holding a resource and waiting for another resource acquired by sorge other process 
+1- try-finally blocks: (this what i did to prevent deadlocks in my code) i add the lock() or acquire() calls in a try block and placing the unlock() or release() in the finally block, I ensured that a resource is always freed even if the thread crashes or an exception occurs This prevents a Hold and Wait condition
+
+2- lock ordering : ensured that all threads request shared resources in a strictو consistent order rocess must acquire the CPU Semaphore before it can access the Counter Locks eliminated the "Circular Wait" condition]
 
 ---
 
@@ -137,7 +156,7 @@ Document your development process with **minimum 3 entries** showing progression
 
 **Your Answer**:
 
-[Your answer here - explain coarse-grained vs fine-grained locking, independence of counters, concurrency implications. Show understanding of when to use each approach. 5-8 sentences expected.]
+[I implemented separate locks for each counter (fine-grained locking). I made this choice because the three counters (contextSwitchCount, completedProcessCount, and totalWaitingTime) are logically independent resources. By using separate locks, I ensured that a thread updating the context switch count does not block another thread that needs to update the total waiting time ,The main trade-off is that fine-grained locking increases the complexity of the code and requires more care to avoid deadlocks but it provides much better concurrency and higher throughput and a more efficient simulation compared to using a single( coarse-grained) lock ]
 
 ---
 
@@ -145,52 +164,92 @@ Document your development process with **minimum 3 entries** showing progression
 
 ### Critical Section #1: Counter Variables
 
-**Which variables**: 
+**Which variables**: contextSwitchCount, completedProcessCount,totalWaitingTime
 
-**Why they need protection**: 
+**Why they need protection**:They are shared across multiple process threads, Without protection, concurrent (read-modify-write) operations lead to Race Conditions, where updates are lost and final statistics become inaccurate. 
 
 **Synchronization mechanism used**: 
-
+ReentrantLock (Fine-grained approach with separate locks for each counter)
 **Code snippet**:
 ```java
 // Paste your implementation here
-```
+
+public static void incrementContextSwitch() {
+
+        
+        contextSwitchLock.lock();
+        try {
+            contextSwitchCount++;
+        } finally {
+            contextSwitchLock.unlock();
+        }
+    }
+
 
 **Justification**: 
-
+Using separate locks allows threads to update different counters simultaneously
 ---
 
 ### Critical Section #2: Execution Log
 
 **What resource**: 
+List<String> executionLog = new ArrayList<>()
 
-**Why it needs protection**: 
+**Why it needs protection**:
+
+ArrayList is not thread-safe. If multiple threads attempt to call .add() at the same time, it can lead to data corruption andmissing log entries or a ConcurrentModificationException 
 
 **Synchronization mechanism used**: 
+ReentrantLock (logLock)
 
 **Code snippet**:
 ```java
 // Paste your implementation here
 ```
+public static void logExecution(String message) {
+        
+        // RACE CONDITION: ArrayList is not thread-safe!
+
+        logLock.lock();
+        try{
+           executionLog.add(message);
+        }finally{
+            logLock.unlock();
+        }
+}
 
 **Justification**: 
+
+The lock ensures Mutual Exclusion, meaning only one thread can append to the list at a time
 
 ---
 
 ### Critical Section #3: CPU Semaphore
 
-**Purpose of semaphore**: 
+**Purpose of semaphore**: control CPU Access,managing the availability of the CPU as a resource
 
 **Number of permits and why**: 
-
+1 permit This creates a Binary Semaphore
 **Where implemented**: 
-
+Inside the run() ,runToCompletion() methods of the Process class 
 **Code snippet**:
 ```java
 // Paste your implementation here
 ```
+public void runToCompletion() {
+       
+        try{ SharedResources.cpuSemaphore.acquire();
+        try {
+           
+        }  finally {
+            SharedResources.cpuSemaphore.release();
+        }} catch (InterruptedException e) {
+            System.out.println(Colors.RED + "  ✗ " + name + " was interrupted." + Colors.RESET);
+        } 
+    }
+**Effect on program behavior**:
 
-**Effect on program behavior**: 
+It forces processes to execute sequentially rather than overlapping
 
 ---
 
@@ -251,7 +310,7 @@ Document your development process with **minimum 3 entries** showing progression
 
 ### What I learned about synchronization:
 
-[6-8 sentences about key concepts, challenges, insights]
+[Working on this project made me realize how messy multi-threading can be without proper control. I learned that even a simple task like incrementing a counter can fail because threads overlap, a concept I now know as a Race Condition. The most important lesson for me was learning how to use try-finally blocks.it’s not just about locking a resource, but ensuring it’s released so the whole system doesn’t freeze.I also spent some time understanding why we use a Semaphore for the CPU specifically]
 
 ---
 
@@ -259,44 +318,53 @@ Document your development process with **minimum 3 entries** showing progression
 
 Give TWO examples where synchronization is critical:
 
-**Example 1**: 
+**Example 1**: Banking Systems: Synchronization is critical when two people try to withdraw money from the same joint account at the exact same time. Without locks, both transactions might read the same initial balance and successfully withdraw money
 
-**Example 2**: 
+**Example 2**Online flight Ticket Booking: When booking a seat for a flight  synchronization ensures that the same seat isn't sold to two different customers A lock is placed on the specific seat the moment a user starts the payment process, preventing others from racing to buy it simultaneously
 
 ---
 
 ### How I would explain synchronization to others:
 
-[Explain to someone who just finished Assignment 1 - use simple terms and analogies]
+[Think of synchronization as House Rules for a shared gaming room with only one laptop
+
+The Problem (Race Condition): If everyone tries to grab the controller at the exact same time, the wires get tangled, the game glitches, and it crashes.
+
+The Lock : This is like a Room Key. To play, you must take the key and lock the door.Others wait outside until you finish and return the key This ensures only one person (thread) changes the data at a time.
+
+The Semaphore: This is like the Number of Chairs If there’s only one chair, only one person can sit and play. Even if others are in the room, they must wait for that chair to be free]
 
 ---
 
 ## Part 6: GitHub Repository Information
 
-**Repository URL**: 
+**Repository URL**: [https://github.com/MaisaFahad/OS-Assignment3-Maisa-ALAnbar]
 
-**Number of commits**: 
+**Number of commits**: 4 commits
 
 **Commit messages**: 
-1. 
-2. 
-3. 
-4. 
+1. Set my student Id 445052201
+2. Add ReentrantLock to protect counter variables (contextSwitchCount, completedProcessCount, totalWaitingTime)
+3.Add ReentrantLock to protect execution log (ArrayList- prevent ConcurrentModificationException) 
+4. Add Semaphore to control concurrent CPU access (binary semaphore with 1 permit
 
 ---
 
 ## Summary
 
 **Total time spent on assignment**: 
-
+4 hours
 **Key takeaways**: 
-1. 
-2. 
-3. 
+1. Data Safety is Priority
+2. Resource Management
+3. I realized that always releasing locks using finally blocks is the only way to ensure the system stays stable and avoids deadlocks.
 
 **Most challenging aspect**: 
+The hardest part was definitely debugging the Race Conditions. It was frustrating at first because the program would work fine once, then give wrong counter totals or crash the next time. Figuring out exactly where to put the lock() and unlock() calls to protect the ArrayList
 
 **What I'm most proud of**: 
+
+I am most proud of implementing Fine-grained locking for the counters. Instead of just using one big lock for everything, I managed to create separate locks for each resource. It made the code more organized and efficien
 
 ---
 
