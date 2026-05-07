@@ -256,53 +256,69 @@ It forces processes to execute sequentially rather than overlapping
 ## Part 4: Testing and Verification (2 marks)
 
 ### Test 1: Consistency Check
-**What I tested**: Running program multiple times to verify consistent results
+**What I tested**: Verifying that the final counters (Context Switches, Waiting Time) are identical across multiple runs.
 
 **Testing procedure**: 
-```bash
-# Commands used (run the program at least 5 times)
-```
+Run the program 5 times using the same input file and the same Time Quantum
 
 **Results**: 
-(Show that running multiple times produces consistent, correct results)
+(Total Context Switches: 20
+Total Completed Processes: 11
+Total Waiting Time: 361248ms
+Average Waiting Time: 32840ms
+
+Total Context Switches: 20
+Total Completed Processes: 11
+Total Waiting Time: 361779ms
+Average Waiting Time: 32889ms
+
+Total Context Switches: 20
+Total Completed Processes: 11
+Total Waiting Time: 360298ms
+Average Waiting Time: 32754ms
+)
 
 **Why synchronization is necessary**: 
-(Explain what race conditions COULD occur without synchronization, even if you didn't observe them. Explain which shared resources need protection and why.)
+Without locks, if two threads finish at the same time, they might try to update the completedProcessCount together, and one update would be lost (Race Condition)
 
 **Conclusion**: 
+
+The locks are working perfectly to keep the data consistent
 
 ---
 
 ### Test 2: Exception Testing
 **What I tested**: Checking for ConcurrentModificationException
 
-**Testing procedure**: 
+**Testing procedure**: I monitored the console while all processes were running and logging their status at the same time.
 
-**Results**: 
+**Results**: The program finished all tasks without any red error messages or crashes.
 
-**What this proves**: 
+**What this proves**: It proves that my logLock is protecting the shared List, so multiple threads don't break the list when they write to it simultaneously
 
 ---
 
 ### Test 3: Correctness Verification
 **What I tested**: Verifying correct final values (total burst time, context switches, etc.)
 
-**Expected values**: 
+**Expected values**:Processes: 11  ,  Total Context Switches: 20
 
-**Actual values**: 
+**Actual values**:
+Total Context Switches: 20
+Total Completed Processes: 11 
 
-**Analysis**: 
+**Analysis**: The numbers match my manual calculation, which means the synchronization code didn't add any extra or wrong data
 
 ---
 
 ### Test 4: Different Scenarios
-**Scenario tested**: [e.g., different time quantum, more processes, etc.]
+**Scenario tested**: [Using a very small Time Quantum]
 
-**Purpose**: 
+**Purpose**: To create a lot of traffic and many context switches to see if the locks can handle the pressure
 
-**Results**: 
+**Results**: Even with many quick switches, the program didn't freeze or give wrong totals
 
-**What I learned**: 
+**What I learned**: I learned that synchronization makes the code strong and able to handle heavy multi-threading without errors
 
 ---
 
